@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-var ErroOverflow = errors.New("tai: overflow")
-var ErroUnderflow = errors.New("tai: underflow")
+var ErrOverflow = errors.New("tai: overflow")
+var ErrUnderflow = errors.New("tai: underflow")
 var TAI_PACK = 8
 
 type TAI struct {
@@ -46,18 +46,18 @@ func UnPack(s [8]byte) TAI {
 	return TAI{X: binary.BigEndian.Uint64(s[:])}
 }
 
-// Add returns the difference between two TAI times.
-func (t TAI) Add(u, v TAI) (TAI, error) {
+// Add returns the sum between two TAI times.
+func (u TAI) Add(v TAI) (TAI, error) {
 	if u.X > math.MaxUint64-v.X {
-		return TAI{}, ErroOverflow
+		return TAI{}, ErrOverflow
 	}
 	return TAI{X: u.X + v.X}, nil
 }
 
 // Sub returns the difference between two TAI times.
-func (t TAI) Sub(u, v TAI) (TAI, error) {
+func (u TAI) Sub(v TAI) (TAI, error) {
 	if u.X < v.X {
-		return TAI{}, ErroUnderflow
+		return TAI{}, ErrUnderflow
 	}
 	return TAI{X: u.X - v.X}, nil
 }

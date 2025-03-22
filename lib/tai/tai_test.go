@@ -41,10 +41,14 @@ func TestTAI_Add(t *testing.T) {
 		{TAI{X: math.MaxUint64 - 10}, TAI{X: 5}, TAI{X: math.MaxUint64 - 5}, false},
 		// Overflow case
 		{TAI{X: math.MaxUint64 - 1}, TAI{X: 2}, TAI{}, true},
+		// Boundary Add
+		{TAI{X: math.MaxUint64 - 1}, TAI{X: 1}, TAI{X: math.MaxUint64}, false},
+		// Boundary Max
+		{TAI{X: math.MaxUint64}, TAI{X: 1}, TAI{}, true},
 	}
 
 	for _, tc := range tests {
-		result, err := tc.u.Add(tc.u, tc.v)
+		result, err := tc.u.Add(tc.v)
 		if (err != nil) != tc.shouldFail {
 			t.Errorf("Add(%d, %d): unexpected error state: %v", tc.u.X, tc.v.X, err)
 		} else if !tc.shouldFail && (result != tc.expected) {
@@ -65,14 +69,39 @@ func TestTAI_Sub(t *testing.T) {
 		{TAI{X: 200}, TAI{X: 200}, TAI{X: 0}, false},
 		// Underflow case
 		{TAI{X: 50}, TAI{X: 100}, TAI{}, true},
+		// Boundary Sub
+		{TAI{X: 1}, TAI{X: 1}, TAI{X: 0}, false},
+		// Boundary Sub
+		{TAI{X: 0}, TAI{X: 1}, TAI{}, true},
 	}
 
 	for _, tc := range tests {
-		result, err := tc.u.Sub(tc.u, tc.v)
+		result, err := tc.u.Sub(tc.v)
 		if (err != nil) != tc.shouldFail {
 			t.Errorf("Sub(%d, %d): unexpected error state: %v", tc.u.X, tc.v.X, err)
 		} else if !tc.shouldFail && (result != tc.expected) {
 			t.Errorf("Sub(%d, %d): expected %d, got %d", tc.u.X, tc.v.X, tc.expected.X, result.X)
+		}
+	}
+}
+
+func TestTAI_Less(t *testing.T) {
+	tests := []struct {
+		t1, t2   TAI
+		expected bool
+	}{
+		// t1 is less than t2
+		{TAI{X: 100}, TAI{X: 200}, true},
+		// t1 is equal to t2
+		{TAI{X: 100}, TAI{X: 100}, false},
+		// t1 is greater than t2
+		{TAI{X: 200}, TAI{X: 100}, false},
+	}
+
+	for _, tc := range tests {
+		result := tc.t1.Less(tc.t2)
+		if result != tc.expected {
+			t.Errorf("Less(%d, %d): expected %v, got %v", tc.t1.X, tc.t2.X, tc.expected, result)
 		}
 	}
 }

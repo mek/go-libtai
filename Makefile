@@ -9,6 +9,7 @@ default:
 
 .PHONY: clean all $(TARGETS) vet fmt lint check lib-test pre-commit
 all: $(TARGETS)
+
 check: fmt vet lint
 	@pre-commit run --all-files
 
@@ -20,7 +21,7 @@ lib-test:
 	@go test -tags=unit ./lib/...
 
 clean:
-	@rm -f *~ $(TARGETS) .*~
+	@rm -f *~ bin/$(TARGETS) .*~
 
 vet:
 	@go vet ./...
