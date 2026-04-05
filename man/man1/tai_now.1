@@ -1,0 +1,21 @@
+.TH TAI_NOW 1 "April 2026" "go-libtai" "User Commands"
+.SH NAME
+tai_now \- display current TAI64 time
+.SH SYNOPSIS
+.B tai_now
+.SH DESCRIPTION
+.B tai_now
+prints the current TAI64 time as a 64-bit decimal integer and as an 
+external TAI64 format (hexadecimal timestamp preceded by @).
+.PP
+TAI (International Atomic Time) is a high-precision, linear time scale 
+independent of leap seconds.
+.SH SEE ALSO
+.BR taia_now (1),
+.BR tai64n (1)
+.SH AUTHOR
+This tool is part of go-libtai, a Go implementation of D. J. Bernstein's 
+libtai.
+.SH NOTES
+The TAI64 format and its specifications were originally established by 
+D. J. Bernstein in his libtai library (https://cr.yp.to/libtai.html).

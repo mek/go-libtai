@@ -1,0 +1,38 @@
+.TH TAIA 3 "April 2026" "go-libtai" "Library Functions"
+.SH NAME
+taia \- Go implementation of TAIA64 high-precision time
+.SH SYNOPSIS
+.B import "go-libtai/lib/taia"
+.PP
+.B type TAIA struct { Sec tai.TAI; Nano uint32; Atto uint32 }
+.PP
+.B func Now() TAIA
+.PP
+.B func (t TAIA) Pack() [16]byte
+.PP
+.B func Unpack(s [16]byte) TAIA
+.PP
+.B func (u TAIA) Add(v TAIA) (TAIA, error)
+.PP
+.B func (u TAIA) Sub(v TAIA) (TAIA, error)
+.PP
+.B func (t TAIA) Half() TAIA
+.SH DESCRIPTION
+The
+.B taia
+package implements the TAIA64 high-precision time format, providing 
+nanosecond and attosecond resolution. It is built upon the TAI64 
+format and handles carriers between precision levels.
+.PP
+TAIA64N is a 12-byte packed format, consisting of 8-byte TAI64 seconds 
+and 4-byte nanoseconds. Full TAIA64 consists of an additional 4-byte 
+attosecond field, for a total of 16 bytes.
+.SH SEE ALSO
+.BR tai (3),
+.BR taia_now (1)
+.SH AUTHOR
+This library is part of go-libtai, a Go implementation of D. J. 
+Bernstein's libtai.
+.SH NOTES
+The TAIA64 format and its specifications were originally established by 
+D. J. Bernstein in his libtai library (https://cr.yp.to/libtai.html).

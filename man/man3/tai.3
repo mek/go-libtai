@@ -1,0 +1,37 @@
+.TH TAI 3 "April 2026" "go-libtai" "Library Functions"
+.SH NAME
+tai \- Go implementation of TAI64 time handling
+.SH SYNOPSIS
+.B import "go-libtai/lib/tai"
+.PP
+.B type TAI struct { Sec uint64 }
+.PP
+.B func Now() TAI
+.PP
+.B func (t TAI) Pack() [8]byte
+.PP
+.B func Unpack(s [8]byte) TAI
+.PP
+.B func (u TAI) Add(v TAI) (TAI, error)
+.PP
+.B func (u TAI) Sub(v TAI) (TAI, error)
+.SH DESCRIPTION
+The
+.B tai
+package implements the TAI64 time format. TAI64 values are unsigned 
+64-bit integers that count actual seconds passed since the TAI epoch, 
+independent of leap seconds.
+.PP
+The TAI epoch is roughly 2^62 seconds before the absolute beginning 
+of the TAI scale. The offset used to convert between TAI and Unix 
+time is provided as
+.B TaiUnixOffset.
+.SH SEE ALSO
+.BR taia (3),
+.BR tai_now (1)
+.SH AUTHOR
+This library is part of go-libtai, a Go implementation of D. J. 
+Bernstein's libtai.
+.SH NOTES
+The TAI64 format and its specifications were originally established by 
+D. J. Bernstein in his libtai library (https://cr.yp.to/libtai.html).

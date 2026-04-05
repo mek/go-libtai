@@ -1,14 +1,32 @@
 #
 LIBFILES=lib/tai/tai.go lib/taia/taia.go
 TARGETS=tai_now taia_now tai64n
+PREFIX?=/usr/local
+MANDIR=$(PREFIX)/share/man
 #
 default:
 	@echo "Targets"
 	@echo " clean"
+	@echo " all"
+	@echo " install"
+	@echo " install-man"
 	@echo " $(TARGETS)"
 
-.PHONY: clean all $(TARGETS) vet fmt lint check lib-test pre-commit
+.PHONY: clean all $(TARGETS) vet fmt lint check lib-test pre-commit install install-man
 all: $(TARGETS)
+
+install: all install-man
+	@echo "Installing binaries to $(PREFIX)/bin"
+	@mkdir -p $(PREFIX)/bin
+	@cp bin/tai_now $(PREFIX)/bin/
+	@cp bin/taia_now $(PREFIX)/bin/
+	@cp bin/tai64n $(PREFIX)/bin/
+
+install-man:
+	@echo "Installing man pages to $(MANDIR)"
+	@mkdir -p $(MANDIR)/man1 $(MANDIR)/man3
+	@cp man/man1/*.1 $(MANDIR)/man1/
+	@cp man/man3/*.3 $(MANDIR)/man3/
 
 check: fmt vet lint
 	@pre-commit run --all-files

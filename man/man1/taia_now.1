@@ -1,0 +1,22 @@
+.TH TAIA_NOW 1 "April 2026" "go-libtai" "User Commands"
+.SH NAME
+taia_now \- display current TAIA64 time
+.SH SYNOPSIS
+.B taia_now
+.SH DESCRIPTION
+.B taia_now
+prints the current TAIA64 time, which includes nanosecond precision.
+The output shows the time in seconds with fractional precision and as 
+an external TAI64N format.
+.PP
+The TAI64N format consists of the TAI64 seconds (8 bytes) followed by 
+the nanoseconds (4 bytes), represented in hexadecimal.
+.SH SEE ALSO
+.BR tai_now (1),
+.BR tai64n (1)
+.SH AUTHOR
+This tool is part of go-libtai, a Go implementation of D. J. Bernstein's 
+libtai.
+.SH NOTES
+The TAIA64 format and its specifications were originally established by 
+D. J. Bernstein in his libtai library (https://cr.yp.to/libtai.html).
