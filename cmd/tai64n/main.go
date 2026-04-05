@@ -1,3 +1,6 @@
+// tai64n reads lines from standard input and prepends each line 
+// with a TAI64N timestamp. It is similar to DJB's tai64n tool 
+// and is useful for high-precision log timestamping.
 package main
 
 import (
@@ -9,8 +12,8 @@ import (
 	"os"
 )
 
+// timestamp returns a formatted TAI64N timestamp for the current time.
 func timestamp() string {
-
 	s := make([]byte, 25)
 	now := taia.Now()
 	nowpack := now.Pack()
@@ -33,7 +36,7 @@ func main() {
 		if err != nil {
 			if err == io.EOF {
 				if len(line) > 0 {
-					_, _ = out.WriteString(timestamp())
+					_, _ = out.WriteString(timestamp() + " ")
 					_, _ = out.WriteString(line)
 					out.Flush()
 				}

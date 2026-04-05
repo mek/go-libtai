@@ -1,17 +1,30 @@
 # Go LibTAI
 
-A Go implementation of https://cr.yp.to/libtai.html.
+`go-libtai` is a Go implementation of the TAI64 and TAIA64 time formats 
+originally specified by D. J. Bernstein in [libtai](https://cr.yp.to/libtai.html).
 
-I was working on some older project that I need to give some
-attention. There were using functions from DJB's libtai, which
-I had to clean up a bit to make they work with modren C compilers.
+TAI (International Atomic Time) provides a linear time scale without the 
+discontinuities of leap seconds, making it ideal for high-precision 
+timestamping and interval calculations.
 
-* https://github.com/mek/libtai
+## Contents
 
-I had also use it a bit with some Go code in the project, so I thought I would bring some of that code out into a seperate Go module. I'll eventually work on more of the code, after I decide how (and if) I'll handle leaps seconds.
+- `lib/tai`: Core TAI64 implementation (second precision).
+- `lib/taia`: TAIA64 implementation (attosecond precision).
+- `cmd/tai_now`: Print the current TAI64 time.
+- `cmd/taia_now`: Print the current TAIA64 time.
+- `cmd/tai64n`: Filter to prepend TAI64N timestamps to each line of input.
 
-* https://github.com/mek/go-libtai
+## Building
+
+A `Makefile` is provided for common tasks:
+
+```bash
+make all        # Build all command-line tools into bin/
+make lib-test   # Run library unit tests
+make check      # Run linting and formatting checks
+```
 
 ## License
 
-Like the original libtai, this is released under the Public Domain.
+Like the original `libtai`, this project is released into the Public Domain.

@@ -1,3 +1,6 @@
+// tai_now prints the current TAI time to standard output.
+// It provides the time as a raw 64-bit integer and as a formatted 
+// TAI64 timestamp.
 package main
 
 import (
@@ -5,28 +8,21 @@ import (
 	"go-libtai/lib/tai"
 )
 
-func hexDigit(n byte) byte {
-	if n < 10 {
-		return '0' + n
-	}
-	return 'a' + (n - 10)
-}
-
-func Timestamp(s [8]byte) string {
-	timestamp := make([]byte, 25)
+// Timestamp formats a packed TAI64 value into a 
+// human-readable hex string preceded by '@'.
+func Timestamp(s [tai.TaiPack]byte) string {
+	timestamp := make([]byte, 17)
 	timestamp[0] = '@'
-	for i := 0; i < 8; i++ {
-		timestamp[i*2+1] = hexDigit((s[i] >> 4) & 0xF)
-		timestamp[i*2+2] = hexDigit(s[i] & 0xF)
+	for i := 0; i < tai.TaiPack; i++ {
+		timestamp[i*2+1] = tai.HexDigit((s[i] >> 4) & 0xF)
+		timestamp[i*2+2] = tai.HexDigit(s[i] & 0xF)
 	}
 	return string(timestamp)
 }
 
 func main() {
-	var s [8]byte
-
 	taiTime := tai.Now()
-	s = taiTime.Pack()
-	fmt.Println("Current TAI time:", taiTime.X)
+	s := taiTime.Pack()
+	fmt.Println("Current TAI time:", taiTime.Sec)
 	fmt.Println("Current TAI timestamp:", Timestamp(s))
 }

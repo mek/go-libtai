@@ -1,3 +1,6 @@
+// Package taia implements the TAIA64 time format.
+// TAIA64 extends TAI64 with nanosecond and attosecond precision, 
+// providing a total resolution of one quintillionth of a second.
 package taia
 
 import (
@@ -10,56 +13,67 @@ import (
 	"time"
 )
 
-// TAIA is a high-precision time value.
+// TAIA represents a high-precision time value.
+// It combines a 64-bit TAI second value with additional precision fields.
 type TAIA struct {
-	Sec  tai.TAI // seconds in TAI format
-	Nano uint32  // nanoseconds (0...999999999)
-	Atto uint32  // attoseconds (0...999999999)
+	Sec  tai.TAI // TAI seconds
+	Nano uint32  // Nanoseconds (0-999,999,999)
+	Atto uint32  // Attoseconds (0-999,999,999)
 }
 
+// Time conversion constants.
 const (
 	NanoInSec  = 1_000_000_000
 	AttoInNano = 1_000_000_000
 )
 
+// Standard error values for TAIA arithmetic.
 var ErrOverflow = errors.New("taia: overflow")
-var ErrorUnderflow = errors.New("taia: underflow")
-var TAIA_PACK = 16
-var TAIA_FMTFRAC = 19
+var ErrUnderflow = errors.New("taia: underflow")
 
-// Now returns the current TAIA time.
+// TaiaPack is the number of bytes in a packed TAIA64 value.
+const TaiaPack = 16
+
+// TaiaFmtFrac is the number of characters used to represent the 
+// fractional part in a string.
+const TaiaFmtFrac = 19
+
+// Now returns the current time in TAIA format.
+// Nanoseconds are retrieved from the system clock; attoseconds are 
+// set to zero as they are not supported by the Go standard library.
 func Now() TAIA {
 	now := time.Now()
 	return TAIA{
-		Sec:  tai.TAI{X: tai.TaiUnixOffset + uint64(now.Unix())},
+		Sec:  tai.TAI{Sec: tai.TaiUnixOffset + uint64(now.Unix())},
 		Nano: uint32(now.Nanosecond()),
-		Atto: 0, // Go does not support attoseconds
+		Atto: 0,
 	}
 }
 
-// fraction returns the fractional part of the TAIA time.
+// Frac returns the fractional part of the TAIA time as a float64.
 func (t TAIA) Frac() float64 {
 	return (float64(t.Atto)*float64(1e-09) + float64(t.Nano)) * float64(1e-09)
 }
 
-// taiaFmtFrac formats the fractional part of a TAIA timestamp into an 18-character string
+// FmtFrac formats the fractional part into an 18-character string 
+// representing nanoseconds and attoseconds.
 func (t *TAIA) FmtFrac() string {
 	var builder strings.Builder
 	fmt.Fprintf(&builder, "%09d%09d", t.Nano, t.Atto)
 	return builder.String()
 }
 
-// Approx a float64 approximation of the TAIA time.
+// Approx returns a float64 approximation of the TAIA time in seconds.
 func (t TAIA) Approx() float64 {
-	return float64(t.Sec.X) + t.Frac()
+	return float64(t.Sec.Sec) + t.Frac()
 }
 
-// Less returns true if t < u.
+// Less returns true if time t is earlier than time u.
 func (t TAIA) Less(u TAIA) bool {
-	if t.Sec.X < u.Sec.X {
+	if t.Sec.Sec < u.Sec.Sec {
 		return true
 	}
-	if t.Sec.X > u.Sec.X {
+	if t.Sec.Sec > u.Sec.Sec {
 		return false
 	}
 	if t.Nano < u.Nano {
@@ -71,54 +85,61 @@ func (t TAIA) Less(u TAIA) bool {
 	return t.Atto < u.Atto
 }
 
-// Half returns the TAIA time t / 2.
+// Half returns a TAIA value that is exactly half the duration of t.
+// It correctly handles carries between the second, nanosecond, and 
+// attosecond fields.
 func (t TAIA) Half() TAIA {
 	return TAIA{
-		Sec:  tai.TAI{X: t.Sec.X / 2},
-		Nano: uint32((uint64(t.Sec.X%2)*1_000_000_000 + uint64(t.Nano)) / 2),
+		Sec:  tai.TAI{Sec: t.Sec.Sec / 2},
+		Nano: uint32((uint64(t.Sec.Sec%2)*1_000_000_000 + uint64(t.Nano)) / 2),
 		Atto: uint32((uint64(t.Nano%2)*1_000_000_000 + uint64(t.Atto)) / 2),
 	}
 }
 
+// Uint sets the second field to s and resets the fractional precision.
 func (t *TAIA) Uint(s uint) {
-	t.Sec.X = uint64(s)
+	t.Sec.Sec = uint64(s)
 	t.Nano = 0
 	t.Atto = 0
 }
 
+// Tai returns the TAI seconds component of the TAIA value.
 func (t TAIA) Tai() tai.TAI {
-	return tai.TAI{X: t.Sec.X}
+	return tai.TAI{Sec: t.Sec.Sec}
 }
 
+// String returns a string representation of the TAIA value.
 func (t TAIA) String() string {
-	return fmt.Sprintf("%18d%.12f", t.Sec.X, t.Frac())
+	return fmt.Sprintf("%18d%.12f", t.Sec.Sec, t.Frac())
 }
 
-func (t TAIA) Pack() [16]byte {
-	var s [16]byte
-	binary.BigEndian.PutUint64(s[:8], t.Sec.X)
+// Pack converts the TAIA time into a 16-byte big-endian slice.
+// The format is: 8 bytes for seconds, 4 bytes for nanoseconds, 
+// and 4 bytes for attoseconds.
+func (t TAIA) Pack() [TaiaPack]byte {
+	var s [TaiaPack]byte
+	binary.BigEndian.PutUint64(s[:8], t.Sec.Sec)
 	binary.BigEndian.PutUint32(s[8:], t.Nano)
 	binary.BigEndian.PutUint32(s[12:], t.Atto)
 	return s
 }
 
-func Unpack(s [16]byte) TAIA {
+// Unpack converts a 16-byte big-endian slice into a TAIA time.
+func Unpack(s [TaiaPack]byte) TAIA {
 	return TAIA{
-		Sec:  tai.TAI{X: binary.BigEndian.Uint64(s[:8])},
+		Sec:  tai.TAI{Sec: binary.BigEndian.Uint64(s[:8])},
 		Nano: binary.BigEndian.Uint32(s[8:]),
 		Atto: binary.BigEndian.Uint32(s[12:]),
 	}
 }
 
-// Add returns the TAIA time u + v.
+// Add returns the sum of two TAIA times.
+// It handles overflows between attoseconds, nanoseconds, and seconds.
 func (u TAIA) Add(v TAIA) (TAIA, error) {
-	// Setup the new values
-
 	newSec := uint64(0)
 	newNano := u.Nano + v.Nano
 	newAtto := u.Atto + v.Atto
 
-	// check for overflows in nano and atto
 	if newAtto >= 1_000_000_000 {
 		newAtto -= 1_000_000_000
 		newNano++
@@ -129,64 +150,60 @@ func (u TAIA) Add(v TAIA) (TAIA, error) {
 		newSec++
 	}
 
-	if u.Sec.X > math.MaxUint64-v.Sec.X+newSec {
+	if u.Sec.Sec > math.MaxUint64-v.Sec.Sec {
+		return TAIA{}, ErrOverflow
+	}
+	resSec := u.Sec.Sec + v.Sec.Sec
+	if resSec > math.MaxUint64-newSec {
 		return TAIA{}, ErrOverflow
 	}
 
 	return TAIA{
-		Sec:  tai.TAI{X: u.Sec.X + v.Sec.X + newSec},
+		Sec:  tai.TAI{Sec: resSec + newSec},
 		Nano: newNano,
 		Atto: newAtto,
 	}, nil
-
 }
 
-// Sub returns the TAIA time u - v.
+// Sub returns the difference between two TAIA times.
+// It performs a multi-field subtraction with borrows. 
+// It returns ErrUnderflow if the result would be negative.
 func (u TAIA) Sub(v TAIA) (TAIA, error) {
-
-	newSec := u.Sec.X
+	newSec := u.Sec.Sec
 	newNano := u.Nano
 	newAtto := u.Atto
 
-	// check for attosecond underflow
-	if newAtto < v.Atto { // we need to barrow a nanosecond
-		if newNano == 0 { // do we need to borrow a second?
-			if newSec == 0 { // out of time
-				return TAIA{}, ErrorUnderflow
+	if newAtto < v.Atto {
+		if newNano == 0 {
+			if newSec == 0 {
+				return TAIA{}, ErrUnderflow
 			}
-			// 0 nanoseconds, borow 1 second
-			// Set nanoseconds to max
 			newSec--
 			newNano = 999_999_999
 		} else {
-			// borrow 1 nanosecond
 			newNano--
 		}
 		newAtto += 1_000_000_000
 	}
 	newAtto -= v.Atto
 
-	// check for nanosecond underflow
-	if newNano < v.Nano { // we need to borrow a second
-		if newSec == 0 { // out of time
-			return TAIA{}, ErrorUnderflow
+	if newNano < v.Nano {
+		if newSec == 0 {
+			return TAIA{}, ErrUnderflow
 		}
-		// borrow 1 second and add to nanoseconds
 		newSec--
 		newNano += 1_000_000_000
 	}
 	newNano -= v.Nano
 
-	// check for second underflow, i.e: negative time
-	if newSec < v.Sec.X {
-		return TAIA{}, ErrOverflow
+	if newSec < v.Sec.Sec {
+		return TAIA{}, ErrUnderflow
 	}
-	newSec -= v.Sec.X
+	newSec -= v.Sec.Sec
 
 	return TAIA{
-		Sec:  tai.TAI{X: newSec},
+		Sec:  tai.TAI{Sec: newSec},
 		Nano: newNano,
 		Atto: newAtto,
 	}, nil
-
 }
